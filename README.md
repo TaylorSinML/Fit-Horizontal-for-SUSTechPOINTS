@@ -8,27 +8,8 @@
 
 When annotating 3D LiDAR data, the standard **Fit Position** moves the box along all axes simultaneously, which often causes unwanted vertical drift. **Fit Horizontal** solves this by shifting the box **only along the screen-horizontal axis**, snapping it to the center of the detected point cluster.
 
-### Key Properties
-
-| Property | Behavior |
-|----------|----------|
-| Horizontal position | Adjusted — centers on point cloud |
-| Vertical position | Unchanged |
-| Box size (scale) | Unchanged |
-| Box rotation | Unchanged |
-
----
-
-## How It Works
-
-```
-1. Expand search area (1.3x on X/Y)
-2. Collect all LiDAR points in that zone
-3. Transform points to box-local coords
-4. Filter ground (remove bottom 1m layer)
-5. Compute min/max along the target axis
-6. Translate box to (min + max) / 2
-```
+![Horizontal](https://github.com/user-attachments/assets/6ec486fb-99c3-44c7-9ce3-531cf592014b)
+![Fit Horizontal](https://github.com/user-attachments/assets/241d6dce-c124-4982-aff3-fb2b31cf8ca4)
 
 ### Algorithm in Detail
 
@@ -39,15 +20,6 @@ When annotating 3D LiDAR data, the standard **Fit Position** moves the box along
 3. **Ground filtering** — The lowest Z-coordinate among all collected points is found. Every point within **0.5 m** above that minimum is discarded. This removes road/ground points that would otherwise skew the horizontal centering. If all points are filtered out, the filter is bypassed (fallback).
 
 4. **Centering** — From the remaining points, the min and max values along the target axis are found. The box is translated so its center sits at `(min + max) / 2` on that axis. No other axes are touched.
-
-### Axis Mapping per View
-
-| View Window | Screen Horizontal | Axis Used |
-|-------------|-------------------|-----------|
-| Z-view (top-down) | horizontal | Y |
-| Y-view (side) | horizontal | X |
-| X-view (front) | horizontal | Y |
-
 ---
 
 ## Tunable Parameters
@@ -255,23 +227,6 @@ function on_x_fit_horizontal(){
     </g></svg>
 </div>
 ```
-
----
-
-## Comparison with Fit Position
-
-| | Fit Position | Fit Horizontal |
-|---|---|---|
-| Axes moved | X + Y | Single axis only |
-| Vertical (Z) | Changed (auto_shrink_box centers all axes) | Unchanged |
-| Box size | Changed (auto_shrink_box resizes) | Unchanged |
-| Rotation | Can change (auto_rotate_xyz) | Unchanged |
-| Search expansion | 2x X, 2x Y, 3x Z | 1.3x X, 1.3x Y, 1x Z |
-| Ground filter | 0.2 m (via get_dimension_of_points) | 0.5 m (custom filter) |
-| Centering method | Stick nearest face to lidar side | Midpoint (min+max)/2 |
-| Lidar orientation | Yes — determines which face to stick | No — purely geometric |
-
----
 
 ## License
 
